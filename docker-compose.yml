@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  voice-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mental-health-voice-engine
+    ports:
+      - "8013:8013"
+    volumes:
+      # Mount directories for persistent data
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./logs:/app/logs
+      - ./models:/app/models
+    environment:
+      # Load environment variables from .env file
+      - API_KEY=${API_KEY}
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    restart: unless-stopped
+    # Add health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8013/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits (adjust based on your VPS capacity)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    networks:
+      - voice-engine-network
+
+networks:
+  voice-engine-network:
+    driver: bridge
